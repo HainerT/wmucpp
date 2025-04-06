@@ -32,13 +32,11 @@ using t1  = ActiveLow<Pin<Port<A>, 6>, Input>; // Pin 4
 using s2  = ActiveLow<Pin<Port<B>, 3>, Input>; // Pin 6
 using t2  = ActiveLow<Pin<Port<B>, 2>, Input>; // Pin 7
 
-#ifdef USE_GPIO_AS_GND
-using o1 = ActiveLow<Pin<Port<A>, 7>, Output>; // Pin 5
-using o2 = ActiveLow<Pin<Port<B>, 0>, Output>; // Pin 9
-using o3 = ActiveLow<Pin<Port<A>, 2>, Output>; // Pin 12 (rx: unused)
-using o4 = ActiveLow<Pin<Port<A>, 3>, Output>; // Pin 13
-using o5 = ActiveLow<Pin<Port<B>, 1>, Output>; // Pin 8
-#endif
+
+using o1 = ActiveLow<Pin<Port<A>, 7>, Input>; // Pin 5
+using o2 = ActiveLow<Pin<Port<B>, 0>, Input>; // Pin 9
+using o3 = ActiveLow<Pin<Port<A>, 2>, Input>; // Pin 12 (rx: unused)
+
 
 #ifdef USE_LED
 using led = ActiveHigh<Pin<Port<B>, 1>, Output>;
@@ -59,19 +57,7 @@ struct FSM final {
     enum class State : uint8_t {Undefined, Run};
 
     static inline void init() {
-#ifdef USE_GPIO_AS_GND
-        o1::init(); // use some outputs as "low" for the switches ...
-        o2::init(); // ... just to make to wiring easier ;-)
-        o3::init();
-        o4::init();
-        o5::init();
 
-        o1::activate();
-        o2::activate();
-        o3::activate();
-        o4::activate();
-        o5::activate();
-#endif
 #ifdef USE_LED
         led::init();
 #endif
@@ -80,6 +66,9 @@ struct FSM final {
         t1::init();
         s2::init();
         t2::init();
+        o1::init();
+        o2::init();
+        o3::init();
         serialout::init();
     }
     static inline void periodic() {
@@ -124,6 +113,15 @@ private:
         }
         if (t2::isActive()) {
             b |= 0x10;
+        }
+        if (o1::isActive()) {
+            b |= 0x20;
+        }
+        if (o2::isActive()) {
+            b |= 0x40;
+        }
+        if (o3::isActive()) {
+            b |= 0x80;
         }
         serialout::set(b);
     }
